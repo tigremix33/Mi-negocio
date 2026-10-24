@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Negocio - Punto de Venta & Control</title>
+
+  <meta name="theme-color" content="#0f172a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mi Negocio POS">
+
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Mi Negocio - POS Inteligente","short_name":"Mi Negocio","start_url":"./","display":"standalone","background_color":"#0f172a","theme_color":"#0f172a"}'>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: #0f172a; color: #f8fafc; padding-bottom: 20px; user-select: none; }
+    
+    header { background-color: #1e293b; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 10; }
+    .brand { font-size: 18px; font-weight: bold; color: #fff; letter-spacing: 0.5px; }
+    .brand-sub { font-size: 11px; color: #38bdf8; display: block; font-weight: 600; }
+    
+    .btn-install { background-color: #10b981; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    
+    nav { background-color: #1e293b; border-bottom: 1px solid #334155; display: flex; overflow-x: auto; white-space: nowrap; }
+    .nav-tab { background: none; border: none; color: #94a3b8; padding: 12px 16px; font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; }
+    .nav-tab.active { color: #38bdf8; border-bottom-color: #38bdf8; background-color: #0f172a; }
+    
+    main { padding: 16px; max-width: 1100px; margin: 0 auto; }
+    .grid-pos { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    @media (min-width: 768px) { .grid-pos { grid-template-columns: 2fr 1fr; } }
+    
+    .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .card-title { font-size: 13px; font-weight: 700; color: #38bdf8; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    .quick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+    .btn-quick { background-color: #334155; border: 1px solid #475569; color: #fff; padding: 10px; border-radius: 8px; text-align: left; cursor: pointer; transition: background 0.2s; }
+    .btn-quick:active { background-color: #475569; }
+    .btn-quick .name { font-size: 12px; font-weight: 600; display: block; }
+    .btn-quick .price { font-size: 13px; font-weight: bold; color: #34d399; margin-top: 4px; display: block; }
+    
+    .catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; max-height: 320px; overflow-y: auto; }
+    .product-item { background-color: #0f172a; border: 1px solid #334155; padding: 10px; border-radius: 8px; display: flex; flex-direction: column; justify-content: space-between; }
+    .product-name { font-size: 12px; font-weight: 600; color: #e2e8f0; }
+    .product-price { font-size: 13px; font-weight: bold; color: #34d399; margin: 4px 0; }
+    .product-stock { font-size: 10px; color: #94a3b8; }
+    
+    .btn-add { background-color: #2563eb; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; align-self: flex-end; margin-top: 6px; }
+    
+    .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #334155; font-size: 12px; }
+    .cart-controls { display: flex; align-items: center; gap: 6px; }
+    .btn-qty { background-color: #334155; color: white; border: none; width: 24px; height: 24px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+    .btn-remove { background-color: #ef4444; color: white; border: none; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; }
+    
+    .cart-summary { margin-top: 12px; padding-top: 12px; border-top: 1px solid #334155; }
+    .total-row { display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; color: #34d399; margin-top: 8px; }
+    
+    select, input { width: 100%; background-color: #0f172a; border: 1px solid #334155; color: white; padding: 10px; border-radius: 8px; font-size: 13px; margin-top: 4px; margin-bottom: 10px; }
+    
+    .btn-pay { width: 100%; background-color: #10b981; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; margin-top: 6px; }
+    .btn-credit { background-color: #d97706; }
+    
+    .toast { position: fixed; bottom: 16px; right: 16px; background-color: #1e293b; border: 1px solid #38bdf8; color: #fff; padding: 12px 18px; border-radius: 8px; font-size: 13px; display: none; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <span class="brand">🚀 Mi Negocio POS</span>
+      <span class="brand-sub">Sistema de Control & Ventas</span>
+    </div>
+    <button id="pwaInstallBtn" onclick="installPWA()" class="btn-install">Instalar App</button>
+  </header>
+
+  <nav>
+    <button onclick="switchTab('pos')" id="tab-pos" class="nav-tab active">Venta / POS</button>
+    <button onclick="switchTab('compras')" id="tab-compras" class="nav-tab">Compras & Inventario</button>
+    <button onclick="switchTab('clientes')" id="tab-clientes" class="nav-tab">Clientes & Fiado</button>
+    <button onclick="switchTab('caja')" id="tab-caja" class="nav-tab">Caja</button>
+    <button onclick="switchTab('informes')" id="tab-informes" class="nav-tab">Informes</button>
+  </nav>
+
+  <main>
+    <section id="view-pos" class="grid-pos">
+      
+      <div>
+        <!-- Accesos Rápidos Generales -->
+        <div class="card">
+          <div class="card-title">Ítems / Servicios Frecuentes</div>
+          <div class="quick-grid">
+            <button onclick="addQuickService('Producto General', 1000)" class="btn-quick">
+              <span class="name">Prod. General</span>
+              <span class="price">$1.000</span>
+            </button>
+            <button onclick="addQuickService('Servicio / Trabajo', 2000)" class="btn-quick">
+              <span class="name">Servicio Rápido</span>
+              <span class="price">$2.000</span>
+            </button>
+            <button onclick="addQuickService('Bebida / Refresco', 2500)" class="btn-quick">
+              <span class="name">Bebida / Snack</span>
+              <span class="price">$2.500</span>
+            </button>
+            <button onclick="addQuickService('Recarga / Minuto', 1000)" class="btn-quick">
+              <span class="name">Recarga / Saldo</span>
+              <span class="price">$1.000</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Inventario -->
+        <div class="card">
+          <div class="card-title">Catálogo de Productos</div>
+          <input type="text" id="searchProductInput" oninput="renderProductCatalog()" placeholder="Buscar producto por nombre...">
+          <div id="productCatalog" class="catalog-grid"></div>
+        </div>
+      </div>
+
+      <!-- Carrito -->
+      <div>
+        <div class="card">
+          <div class="card-title">Carrito de Venta</div>
+          <div id="cartList"></div>
+
+          <div class="cart-summary">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: #94a3b8;">
+              <span>Total de Ítems: <strong id="cartItemCount" style="color: #fff;">0</strong></span>
+            </div>
+            <div class="total-row">
+              <span>Total a Pagar:</span>
+              <span id="cartTotal">$0</span>
+            </div>
+
+            <label style="font-size: 11px; color: #94a3b8; margin-top: 10px; display: block;">Cliente asignado:</label>
+            <select id="cartClientSelect">
+              <option value="Contado">-- Público General / Contado --</option>
+            </select>
+
+            <button onclick="checkout('Contado')" class="btn-pay">Pagar Contado</button>
+            <button onclick="checkout('Fiado')" class="btn-pay btn-credit">Registrar Fiado</button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Módulo Compras -->
+    <section id="view-compras" style="display: none;">
+      <div class="card">
+        <div class="card-title">Registrar Producto / Reabastecer Stock</div>
+        <form onsubmit="handleProductSubmit(event)">
+          <input type="text" id="prodName" placeholder="Nombre del artículo" required>
+          <input type="number" id="prodCost" placeholder="Precio de compra / costo ($)" required>
+          <input type="number" id="prodPrice" placeholder="Precio de venta ($)" required>
+          <input type="number" id="prodStock" placeholder="Cantidad de unidades a ingresar" required>
+          <button type="submit" class="btn-pay">Guardar en Inventario</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Módulo Clientes -->
+    <section id="view-clientes" style="display: none;">
+      <div class="card">
+        <div class="card-title">Registrar Nuevo Cliente</div>
+        <form onsubmit="handleCustomerSubmit(event)">
+          <input type="text" id="custName" placeholder="Nombre completo" required>
+          <input type="text" id="custPhone" placeholder="Teléfono / WhatsApp">
+          <button type="submit" class="btn-pay">Guardar Cliente</button>
+        </form>
+      </div>
+      <div class="card">
+        <div class="card-title">Directorio de Clientes</div>
+        <div id="customersList"></div>
+      </div>
+    </section>
+
+    <!-- Módulo Caja -->
+    <section id="view-caja" style="display: none;">
+      <div class="card">
+        <div class="card-title">Balance de Caja Activa</div>
+        <p style="font-size: 24px; font-weight: bold; color: #34d399;" id="cashExpected">$0</p>
+        <span style="font-size: 12px; color: #94a3b8;">Total recaudado por ventas</span>
+      </div>
+    </section>
+
+    <!-- Módulo Informes -->
+    <section id="view-informes" style="display: none;">
+      <div class="card">
+        <div class="card-title">Reporte General de Ventas</div>
+        <p style="font-size: 24px; font-weight: bold; color: #38bdf8;" id="statSalesTotal">$0</p>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="toast" class="toast">Notificación del sistema</div>
+
+  <script>
+    const STORAGE_KEY = 'MI_NEGOCIO_POS_V1';
+
+    let db = {
+      products: [
+        { id: '1', name: 'Producto Demo 1', cost: 1000, price: 2000, stock: 20 },
+        { id: '2', name: 'Producto Demo 2', cost: 3000, price: 5000, stock: 15 }
+      ],
+      customers: [],
+      sales: [],
+      expenses: []
+    };
+
+    let cart = [];
+
+    function loadDatabase() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try { db = JSON.parse(saved); } catch(e) {}
+      } else {
+        saveDatabase();
+      }
+    }
+
+    function saveDatabase() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('main > section').forEach(s => s.style.display = 'none');
+      document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+      
+      document.getElementById(`view-${tabId}`).style.display = tabId === 'pos' ? 'grid' : 'block';
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+
+      if (tabId === 'pos') renderProductCatalog();
+      if (tabId === 'clientes') renderCustomers();
+      if (tabId === 'caja') renderCash();
+      if (tabId === 'informes') renderReports();
+    }
+
+    function renderProductCatalog() {
+      const search = (document.getElementById('searchProductInput')?.value || '').toLowerCase();
+      const container = document.getElementById('productCatalog');
+      if (!container) return;
+
+      container.innerHTML = '';
+      db.products.filter(p => p.name.toLowerCase().includes(search)).forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'product-item';
+        item.innerHTML = `
+          <div>
+            <span class="product-name">${p.name}</span>
+            <span class="product-price">$${p.price.toLocaleString()}</span>
+            <span class="product-stock">Stock: ${p.stock}</span>
+          </div>
+          <button onclick="addToCart('${p.id}')" class="btn-add">+ Sumar</button>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function addQuickService(name, price) {
+      const existing = cart.find(i => i.isService && i.name === name);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({ id: 'srv_' + Date.now(), name, price, qty: 1, isService: true });
+      }
+      renderCart();
+      showToast(`Añadido: ${name}`);
+    }
+
+    function addToCart(id) {
+      const prod = db.products.find(p => p.id === id);
+      if (!prod || prod.stock <= 0) return;
+
+      const inCart = cart.find(i => i.id === id);
+      if (inCart) {
+        if (inCart.qty < prod.stock) inCart.qty += 1;
+      } else {
+        cart.push({ id: prod.id, name: prod.name, price: prod.price, qty: 1, isService: false });
+      }
+      renderCart();
+    }
+
+    function updateCartQty(idx, delta) {
+      cart[idx].qty += delta;
+      if (cart[idx].qty <= 0) cart.splice(idx, 1);
+      renderCart();
+    }
+
+    function removeFromCart(idx) {
+      cart.splice(idx, 1);
+      renderCart();
+    }
+
+    function renderCart() {
+      const list = document.getElementById('cartList');
+      if (!list) return;
+
+      list.innerHTML = '';
+      let total = 0, items = 0;
+
+      cart.forEach((item, idx) => {
+        total += item.price * item.qty;
+        items += item.qty;
+
+        const row = document.createElement('div');
+        row.className = 'cart-item';
+        row.innerHTML = `
+          <div>
+            <strong>${item.name}</strong><br>
+            <small style="color: #34d399;">$${item.price.toLocaleString()}</small>
+          </div>
+          <div class="cart-controls">
+            <button onclick="updateCartQty(${idx}, -1)" class="btn-qty">-</button>
+            <span>${item.qty}</span>
+            <button onclick="updateCartQty(${idx}, 1)" class="btn-qty">+</button>
+            <button onclick="removeFromCart(${idx})" class="btn-remove">X</button>
+          </div>
+        `;
+        list.appendChild(row);
+      });
+
+      document.getElementById('cartItemCount').innerText = items;
+      document.getElementById('cartTotal').innerText = `$${total.toLocaleString()}`;
+      populateClientSelect();
+    }
+
+    function populateClientSelect() {
+      const select = document.getElementById('cartClientSelect');
+      if (!select) return;
+      select.innerHTML = '<option value="Contado">-- Público General / Contado --</option>';
+      db.customers.forEach(c => {
+        select.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+      });
+    }
+
+    function checkout(type) {
+      if (cart.length === 0) return;
+
+      let total = 0;
+      cart.forEach(item => {
+        total += item.price * item.qty;
+        if (!item.isService) {
+          const prod = db.products.find(p => p.id === item.id);
+          if (prod) prod.stock -= item.qty;
+        }
+      });
+
+      db.sales.push({ id: Date.now(), total, type, date: new Date().toISOString() });
+      saveDatabase();
+
+      cart = [];
+      renderCart();
+      renderProductCatalog();
+      showToast('Venta registrada con éxito');
+    }
+
+    function handleProductSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('prodName').value;
+      const cost = parseFloat(document.getElementById('prodCost').value) || 0;
+      const price = parseFloat(document.getElementById('prodPrice').value) || 0;
+      const stock = parseInt(document.getElementById('prodStock').value) || 0;
+
+      db.products.push({ id: Date.now().toString(), name, cost, price, stock });
+      saveDatabase();
+      e.target.reset();
+      showToast('Producto guardado');
+    }
+
+    function handleCustomerSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('custName').value;
+      const phone = document.getElementById('custPhone').value;
+
+      db.customers.push({ id: Date.now().toString(), name, phone, debt: 0 });
+      saveDatabase();
+      e.target.reset();
+      renderCustomers();
+      showToast('Cliente guardado');
+    }
+
+    function renderCustomers() {
+      const list = document.getElementById('customersList');
+      if (!list) return;
+      list.innerHTML = db.customers.map(c => `<p style="padding: 8px 0; border-bottom: 1px solid #334155; font-size: 13px;">👤 ${c.name} - ${c.phone || 'Sin contacto'}</p>`).join('');
+    }
+
+    function renderCash() {
+      const totalSales = db.sales.reduce((sum, s) => sum + s.total, 0);
+      document.getElementById('cashExpected').innerText = `$${totalSales.toLocaleString()}`;
+    }
+
+    function renderReports() {
+      const totalSales = db.sales.reduce((sum, s) => sum + s.total, 0);
+      document.getElementById('statSalesTotal').innerText = `$${totalSales.toLocaleString()}`;
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 2000);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadDatabase();
+      renderProductCatalog();
+      renderCart();
+    });
+  </script>
+</body>
+</html>
